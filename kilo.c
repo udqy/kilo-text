@@ -1,14 +1,14 @@
-#define KILO_VERSION "0.0.1"
+#define KILO_VERSION "0.9"
 
 #ifdef __linux__
 #define _POSIX_C_SOURCE 200809L
 #endif
 
-#include <termios.h>
+#include <termios.h> /* This header file gets the characteristics of the current terminal */
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdint.h>
-#include <errno.h>
+#include <errno.h> /* To handle errors */
 #include <string.h>
 #include <ctype.h>
 #include <time.h>
@@ -20,7 +20,7 @@
 #include <fcntl.h>
 #include <signal.h>
 
-/* Syntax highlight types */
+/* Definitions for syntax highlight */
 #define HL_NORMAL 0
 #define HL_NONPRINT 1
 #define HL_COMMENT 2   /* Single line comment. */
@@ -106,26 +106,7 @@ enum KEY_ACTION{
 
 void editorSetStatusMessage(const char *fmt, ...);
 
-/* =========================== Syntax highlights DB =========================
- *
- * In order to add a new syntax, define two arrays with a list of file name
- * matches and keywords. The file name matches are used in order to match
- * a given syntax with a given file name: if a match pattern starts with a
- * dot, it is matched as the last past of the filename, for example ".c".
- * Otherwise the pattern is just searched inside the filenme, like "Makefile").
- *
- * The list of keywords to highlight is just a list of words, however if they
- * a trailing '|' character is added at the end, they are highlighted in
- * a different color, so that you can have two different sets of keywords.
- *
- * Finally add a stanza in the HLDB global variable with two two arrays
- * of strings, and a set of flags in order to enable highlighting of
- * comments and numbers.
- *
- * The characters for single and multi line comments must be exactly two
- * and must be provided as well (see the C language example).
- *
- * There is no support to highlight patterns currently. */
+/* =========================== Syntax highlighting ========================= */
 
 /* C / C++ */
 char *C_HL_extensions[] = {".c",".h",".cpp",".hpp",".cc",NULL};
@@ -168,7 +149,6 @@ struct editorSyntax HLDB[] = {
 static struct termios orig_termios; /* In order to restore at exit.*/
 
 void disableRawMode(int fd) {
-    /* Don't even check the return value as it's too late. */
     if (E.rawmode) {
         tcsetattr(fd,TCSAFLUSH,&orig_termios);
         E.rawmode = 0;
@@ -860,7 +840,7 @@ void editorRefreshScreen(void) {
             if (E.numrows == 0 && y == E.screenrows/3) {
                 char welcome[80];
                 int welcomelen = snprintf(welcome,sizeof(welcome),
-                    "Kilo editor -- verison %s\x1b[0K\r\n", KILO_VERSION);
+                    "Kilo editor (lot better than vim btw) -- verison %s\x1b[0K\r\n", KILO_VERSION);
                 int padding = (E.screencols-welcomelen)/2;
                 if (padding) {
                     abAppend(&ab,"~",1);
@@ -1148,9 +1128,8 @@ void editorMoveCursor(int key) {
     }
 }
 
-/* Process events arriving from the standard input, which is, the user
- * is typing stuff on the terminal. */
-#define KILO_QUIT_TIMES 3
+
+#define KILO_QUIT_TIMES 1
 void editorProcessKeypress(int fd) {
     /* When the file is modified, requires Ctrl-q to be pressed N times
      * before actually quitting. */
